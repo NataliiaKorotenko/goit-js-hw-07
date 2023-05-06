@@ -15,34 +15,12 @@ const createGalleryMarkup = items => items.map(item => createGalleryItemMarkup(i
 
 gallery.insertAdjacentHTML('beforeend', createGalleryMarkup(galleryItems));
 
-let instance = null;
-
-function onModalKeyDown(event) {
-  if (event.code === 'Escape' && instance) {
-    instance.close(); 
-    instance = null;
-    gallery.focus();
-  }
-}
-
-const onGalleryItemClick = e => {
-  e.preventDefault();
-  if (e.target.nodeName !== 'IMG') {
-    return;
-  }
-
-  const { source, alt } = e.target.dataset;
-  
-  instance = new SimpleLightbox('.gallery a', {
+new SimpleLightbox('.gallery a', {
     captionsData: 'alt',
     captionDelay: 250,
     docClose: false
   });
 
-  document.addEventListener('keydown', onModalKeyDown);
-};
-
-gallery.addEventListener('click', onGalleryItemClick);
 
 
 
