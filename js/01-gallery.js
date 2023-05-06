@@ -29,9 +29,11 @@ const onGalleryItemClick = e => {
   }
 
   const { source, alt } = e.target.dataset;
-  instance = basicLightbox.create(`
+
+  const instance = basicLightbox.create(`
     <img src="${source}" alt="${alt}" width="800" height="600">
   `);
+
   instance.show();
 
   document.addEventListener('keydown', onModalKeyDown);
@@ -46,6 +48,8 @@ function onModalKeyDown(event) {
   }
 }
 
-basicLightbox.create(modal).on('close', () => {
-  document.removeEventListener('keydown', onModalKeyDown);
-});
+if (instance) {
+  instance.onClose(() => {
+    document.removeEventListener('keydown', onModalKeyDown);
+  });
+}
