@@ -1,169 +1,50 @@
 import { galleryItems } from './gallery-items.js';
 // Change code below this line
 
-console.log(galleryItems);
+const gallery = document.querySelector('.gallery');
 
-import { galleryItems } from './gallery-items.js';
-// Change code below this line
+const createGalleryItemMarkup = ({ preview, original, description }) => `
+<li class="gallery__item">
+<a class="gallery__link" href="${original}">
+   <img class="gallery__image" src="${preview}" alt="${description}" />
+</a>
+</li>
+`;
 
-console.log(galleryItems);
+const createGalleryMarkup = items => items.map(item => createGalleryItemMarkup(item)).join('');
 
-//** */ Задание 1 - галерея изображений
-// підключення lightbox
-// https://www.jsdelivr.com/package/npm/basiclightbox
+gallery.insertAdjacentHTML('beforeend', createGalleryMarkup(galleryItems));
 
 let instance = null;
-let currentImage = null;
-let isModalActive = false;
 
-const parent = document.querySelector('.gallery');
-
-// створюємо кнопки навігації у модальному вікні
-const btnNext = addNavButton('next')
-const btnPrev = addNavButton('prev')
-
-// створюємо наповнення галереї
-const chields = galleryItems.map(item => { 
-  const li = document.createElement('li');
-  const a = document.createElement('a');
-  const img = document.createElement('img');
-
-  li.classList.add('gallery__item');
-
-  a.classList.add('gallery__link');
-  a.href = item.original;
-  img.classList.add('gallery__image');
-  img.src = item.preview;
-  img.alt = item.description;
-  img.loading = 'lazy';
-  img.dataset.source = item.original;
-
-  a.append(img);
-  li.append(a);
-
-  return li;
-})
-
-parent.append(...chields);
-parent.addEventListener('click', onClickImage)
-
-// ловимо подію натискання кнопок у поточному документі
-document.addEventListener('keydown', (event) => {
-  if (!isModalActive) {
-    return
+function onModalKeyDown(event) {
+  if (event.code === 'Escape' && instance) {
+    instance.close(); 
+    instance = null;
+    gallery.focus();
   }
-
-  event.preventDefault();
-  // Об'єкт кнопок та функцій
-  const objKeys = {
-    'ArrowRight': onPressNextButton,
-    'ArrowLeft': onPressPrevButton,
-    'Escape': instanceClose,
-  }
-
-  // обробчик клавіатури
-  for (const key in objKeys) {
-    if (event.key === key) { 
-      objKeys[key]();
-    }
-  }
-})
-
-function onPressNextButton() {
-  btnNext.click()
-}
-function onPressPrevButton() { 
-  btnPrev.click()
 }
 
-// закриваємо модальне вікно
-function instanceClose() { 
-  instance.close()
-  isModalActive = false;
-}
-
-// подія onClick на картинці
-function onClickImage(event) { 
-  if (event.target.nodeName !== 'IMG') {
+const onGalleryItemClick = e => {
+  e.preventDefault();
+  if (e.target.nodeName !== 'IMG') {
     return;
   }
-  event.preventDefault();
 
-  isModalActive = true;
-  currentImage = event.target;
-  // console.log(currentImage);
+  const { source, alt } = e.target.dataset;
   
-  // створюємо контейнер для модального вікна
-  const div = document.createElement('div');
-  div.style.position = 'relative';
+  instance = new SimpleLightbox('.gallery a', {
+    captionsData: 'alt',
+    captionDelay: 250,
+    docClose: false
+  });
 
-  const image = document.createElement('img');
-  image.src = currentImage.dataset.source;
-  image.alt = currentImage.alt;
-  image.style.cursor = 'zoom-out';
+  document.addEventListener('keydown', onModalKeyDown);
+};
 
-  
-  // ловимо подію на картинці модального вікна
-  image.addEventListener('click', () => instanceClose())
-
-  // додаємо всі елементи до контейнеру
-  div.append( image, btnPrev, btnNext );
-
-  // передаємо контейнер у обробчик Lightbox 
-  instance = basicLightbox.create(div);
-  instance.show();
-}
+gallery.addEventListener('click', onGalleryItemClick);
 
 
-// додаємо кнопки для навігації по галереї
-function addNavButton(navstr) {
-  const pos = (navstr === 'next') ? 'right' : 'left';
-  const btn = document.createElement('button')
-    
-  btn.type = 'button';
-  btn.classList.add((navstr === 'next') ? 'btn-next' : 'btn-prev')
-  
-  const style = {
-    position: 'absolute',
-    top: '50%',
-    display: 'block',
-    'transform': 'transformX(50%)',
-    'font-size': '60px',
-    'padding': '10px',
-    'border': 'none',
-    'cursor': 'pointer',
-    'color': 'white',
-    'backgroundColor': 'rgba(0, 0, 0, .4)',
-  }
-  style[pos] = '20px';
-  btn.textContent = (navstr === 'next') ? '>' : '<'
 
-  // додаємо сss-стилі для кнопки
-  document.styleSheets[0].insertRule(`.btn-${navstr} {}`, 0);
-  const cssStyle = document.styleSheets[0].cssRules[0].style;
-  Object.assign(cssStyle, style);
 
-  // додаємо сss-стилі для наведення мишки на кнопку
-  document.styleSheets[0].insertRule(`.btn-${navstr}:hover, .btn-${navstr}:focus {color:red}`, 0); 
-   
-  // подія - клік на кнопці навігації
-  btn.addEventListener('click', (event) => {
-    if (event.target.nodeName !== 'BUTTON') { 
-      return;
-    }
 
-    instanceClose();
-
-    // (currentImage) == img < a < li
-    const li = currentImage.parentNode.parentNode;
-    const activeNode = (navstr === 'next') ?
-      li.nextSibling :
-      li.previousSibling ;
-    
-    // li > a > img (next/prev image).click() ? -> true
-    activeNode?.lastChild.lastChild.click();
-
-  })
-
-  return btn;
-}
